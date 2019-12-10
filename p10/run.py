@@ -1,11 +1,7 @@
 import numpy as np
 
 if __name__ == '__main__':
-    with open('inputs.txt') as f:
-        inputs = f.read()
-    matrix = [list(l) for l in inputs.splitlines()]
-    matrix = np.asarray(matrix)
-
+    matrix = np.asarray([list(l) for l in open('inputs.txt').read().splitlines()])
     locations = np.argwhere(matrix == '#')
     # obs_list = []
     # for i, cand in enumerate(locations):
@@ -42,25 +38,30 @@ if __name__ == '__main__':
     #         nb_observables += 1
     #     obs_list.append(nb_observables)
     # print(max(obs_list))
-
     observable_counts = []
-    for i, cand in enumerate(locations):
-        diffs = cand - locations
-        diffs = diffs // np.gcd(diffs[:, 0], diffs[:, 1]).reshape(-1, 1)
-        observable_counts.append(np.unique(diffs, axis=0).shape[0])
+    for i, candidate in enumerate(locations):
+        diffs = candidate - locations
+        diffs //= np.gcd(*diffs.T)[:, np.newaxis]
+        observable_counts.append(len(np.unique(diffs, axis=0)))
     print(max(observable_counts) - 1)
 
     Nth = 200
-    obs_coords = locations[np.argmax(observable_counts)]
-    diffs = obs_coords - locations
+    station_coords = locations[np.argmax(observable_counts)]
+    diffs = locations - station_coords
     distances = np.sqrt((diffs ** 2).sum(axis=1))
-    normed_diffs = diffs // np.gcd(diffs[:, 1], diffs[:, 0]).reshape(-1, 1)
-    arcs = np.arctan2(normed_diffs[:, 0], normed_diffs[:, 1])
-    unique_arcs, arc_counts = np.unique(arcs, return_counts=True)
-    rotation_order = np.argsort(unique_arcs)[::-1]
+    diffs //= np.gcd(*diffs.T)[:, np.newaxis]
+    arcs = np.arctan2(*diffs.T[::-1])
+    unique_arcs = np.sort(np.unique(arcs))[::-1]
     assert Nth < unique_arcs.shape[0]
-    location_candidates = np.argwhere([arcs == unique_arcs[rotation_order[Nth - 1]]]).flatten()
-    nth_idx = location_candidates[distances[location_candidates].argmin()]
-    print(locations[nth_idx])
+    location_candidates = arcs == unique_arcs[Nth - 1]
+    nth_coords = locations[location_candidates][distances[location_candidates].argmin()]
+    print(nth_coords)
 
-# 622 - 2001
+    # render = np.zeros(matrix.shape)
+    # render[locations[:, 0], locations[:, 1]] = arcs
+    # # for i in range(rotation_order.shape[0]):
+    # #     locs = locations[arcs == unique_arcs[rotation_order[i]]]
+    # #     render[locs[:,0], locs[:, 1]] = i
+    # print(render)
+
+    # 622 - 2001
