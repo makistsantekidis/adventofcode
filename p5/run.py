@@ -67,5 +67,5 @@ if __name__ == '__main__':
 
     print("_________")
 
-    computer = IntCodeComputer(inputs, setting=5)
+    computer = IntCodeComputer(inputs, inputs=[5])
     computer.run()

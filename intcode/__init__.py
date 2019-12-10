@@ -1,6 +1,6 @@
 from copy import copy
 from operator import add, mul, lt, eq
-from collections import defaultdict
+from collections import defaultdict, deque
 
 op_dict = {
     1: add, 2: mul, 7: lt, 8: eq
@@ -12,14 +12,16 @@ instr_steps = {
 
 
 class IntCodeComputer:
-    def __init__(self, inputs, setting):
-        self.inputs = copy(inputs)
+    def __init__(self, program, inputs, interactive=False):
+        self.program_str = copy(program)
         self.pos = 0
         self.relative_base = 0
-        self.setting = setting
         self.program = defaultdict(lambda: 0)
-        for i, p in enumerate(([int(i) for i in self.inputs.split(',')])):
+        for i, p in enumerate(([int(i) for i in self.program_str.split(',')])):
             self.program[i] = p
+        self.inputs = deque(inputs)
+        self.interactive = interactive
+        self.done = False
 
     def get_value(self, param, opcode):
         if opcode == 1:
@@ -37,7 +39,7 @@ class IntCodeComputer:
 
     def run(self):
         program = self.program
-
+        last_out = None
         while program[self.pos] != 99:
             operation = program[self.pos]
             ops = [int(i) for i in f"{operation:05}"]
@@ -53,11 +55,15 @@ class IntCodeComputer:
             elif opcode == 3:
                 # inp = input('Give input:')
                 adr = self.get_address(program[self.pos + 1], ops[-3])
-                program[adr] = self.setting
+                program[adr] = self.inputs.popleft()
             elif opcode == 4:
                 val = self.get_value(program[self.pos + 1], ops[-3])
                 # print(program[self.pos], program[self.pos + 1])
-                print(val)
+                # print(val)
+                last_out = val
+                if self.interactive:
+                    self.pos += instr_steps[opcode]
+                    return val
             elif opcode in [5, 6]:
                 v1 = self.get_value(program[self.pos + 1], ops[-3])
                 v2 = self.get_value(program[self.pos + 2], ops[-4])
@@ -78,7 +84,7 @@ class IntCodeComputer:
                 v1 = self.get_value(program[self.pos + 1], ops[-3])
                 self.relative_base += v1
             self.pos += instr_steps[opcode]
-
+        self.done = True
         self.pos += 1
         operation = program[self.pos]
         ops = [int(i) for i in f"{operation:05}"]
@@ -87,3 +93,5 @@ class IntCodeComputer:
             val = self.get_value(program[self.pos + 1], ops[-3])
             # print(program[self.pos], program[self.pos + 1])
             print(val)
+            return val
+        return last_out
