@@ -12,7 +12,7 @@ instr_steps = {
 
 
 class IntCodeComputer:
-    def __init__(self, program, inputs, interactive=False):
+    def __init__(self, program, inputs=[], interactive=False):
         self.program_str = copy(program)
         self.pos = 0
         self.relative_base = 0
@@ -55,7 +55,10 @@ class IntCodeComputer:
             elif opcode == 3:
                 # inp = input('Give input:')
                 adr = self.get_address(program[self.pos + 1], ops[-3])
-                program[adr] = self.inputs.popleft()
+                if len(self.inputs) > 0:
+                    program[adr] = self.inputs.popleft()
+                else:
+                    return '_'
             elif opcode == 4:
                 val = self.get_value(program[self.pos + 1], ops[-3])
                 # print(program[self.pos], program[self.pos + 1])
@@ -93,5 +96,4 @@ class IntCodeComputer:
             val = self.get_value(program[self.pos + 1], ops[-3])
             # print(program[self.pos], program[self.pos + 1])
             print(val)
-            return val
-        return last_out
+        return 'done'
