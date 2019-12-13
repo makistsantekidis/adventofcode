@@ -96,4 +96,5 @@ class IntCodeComputer:
             val = self.get_value(program[self.pos + 1], ops[-3])
             # print(program[self.pos], program[self.pos + 1])
             print(val)
+        print(last_out)
         return 'done'

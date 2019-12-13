@@ -11,7 +11,7 @@ if __name__ == '__main__':
     inputs = open('inputs.txt').read()
     program = [int(i) for i in inputs.split(',')]
     panel_colors = defaultdict(lambda: 0)
-
+    panel_colors[(0, 0)] = 1
     computer = IntCodeComputer(inputs, inputs=[], interactive=True)
     position = np.array((0, 0))
     direction = np.array((0, 1))
@@ -36,6 +36,7 @@ if __name__ == '__main__':
     pmax, pmin = parray.max(), parray.min()
     msize = pmax - pmin + 1
     painted = np.zeros((msize, msize))
+    amin = abs(pmin)
     for k, v in panel_colors.items():
-        painted[k[0] + abs(pmin), k[1] + abs(pmin)] = v
+        painted[amin + k[0], amin + k[1]] = v
     print(painted)
