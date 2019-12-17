@@ -12,7 +12,7 @@ instr_steps = {
 
 
 class IntCodeComputer:
-    def __init__(self, program, inputs=[], interactive=False):
+    def __init__(self, program, inputs=[], interactive=False, log=False):
         self.program_str = copy(program)
         self.pos = 0
         self.relative_base = 0
@@ -22,6 +22,7 @@ class IntCodeComputer:
         self.inputs = deque(inputs)
         self.interactive = interactive
         self.done = False
+        self.log = log
 
     def get_value(self, param, opcode):
         if opcode == 1:
@@ -37,6 +38,10 @@ class IntCodeComputer:
         else:
             return param
 
+    def log_(self, logstr):
+        if self.log:
+            print(logstr)
+
     def run(self):
         program = self.program
         last_out = None
@@ -50,19 +55,21 @@ class IntCodeComputer:
                 v2 = self.get_value(program[self.pos + 2], ops[-4])
                 op_res = op(v1, v2)
                 resv = self.get_address(program[self.pos + 3], ops[-5])
-                # print(f"{op.__name__} to {v1} and {v2} into {resv}")
+                self.log_(f"{op.__name__} {v1} and {v2} into {resv}")
                 program[resv] = op_res
             elif opcode == 3:
                 # inp = input('Give input:')
                 adr = self.get_address(program[self.pos + 1], ops[-3])
                 if len(self.inputs) > 0:
-                    program[adr] = self.inputs.popleft()
+                    varin = self.inputs.popleft()
+                    self.log_(f"Setting {adr} to {varin}")
+                    program[adr] = varin
                 else:
                     return '_'
             elif opcode == 4:
                 val = self.get_value(program[self.pos + 1], ops[-3])
-                # print(program[self.pos], program[self.pos + 1])
-                # print(val)
+                # self.log_(program[self.pos], program[self.pos + 1])
+                # self.log_(val)
                 last_out = val
                 if self.interactive:
                     self.pos += instr_steps[opcode]
@@ -72,7 +79,7 @@ class IntCodeComputer:
                 v2 = self.get_value(program[self.pos + 2], ops[-4])
                 do_move = (v1 != 0 and opcode == 5) or (v1 == 0 and opcode == 6)
                 if do_move:
-                    # print(f"Jumping to {self.pos}")
+                    self.log_(f"Jumping to {self.pos}")
                     self.pos = v2
                 else:
                     self.pos += 3
@@ -81,11 +88,12 @@ class IntCodeComputer:
                 v1 = self.get_value(program[self.pos + 1], ops[-3])
                 v2 = self.get_value(program[self.pos + 2], ops[-4])
                 resv = self.get_address(program[self.pos + 3], ops[-5])
-                # print(f"{op.__name__} to {v1} and {v2} into {resv}")
+                self.log_(f"{op.__name__} to {v1} and {v2} into {resv}")
                 program[resv] = 1 if op(v1, v2) else 0
             elif opcode == 9:
                 v1 = self.get_value(program[self.pos + 1], ops[-3])
                 self.relative_base += v1
+                self.log_(f"Increasing relative base by {v1} to {self.relative_base}")
             self.pos += instr_steps[opcode]
         self.done = True
         self.pos += 1
@@ -94,7 +102,7 @@ class IntCodeComputer:
         opcode = ops[-1] + 10 * ops[-2]
         if opcode == 4:
             val = self.get_value(program[self.pos + 1], ops[-3])
-            # print(program[self.pos], program[self.pos + 1])
-            print(val)
-        print(last_out)
+            # self.log_(program[self.pos], program[self.pos + 1])
+            self.log_(val)
+        self.log_(last_out)
         return 'done'
